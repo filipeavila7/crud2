@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 from sqlalchemy.orm import sessionmaker
-from src.model.config import Config
+from model.config import Config
 
 # Carregar a URL do banco de dados a partir do arquivo de configuração
 DATABASE_URL = Config.DATABASE_URL

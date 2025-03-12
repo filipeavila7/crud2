@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from src.model.db import SessionLocal  # Importando a sessão para interagir com o banco de dados
-from src.service import crud  # Importando as funções CRUD
+from model.db import SessionLocal  # Importando a sessão para interagir com o banco de dados
+from src.service import tarefa_services  # Importando as funções CRUD
 import flet as ft  # Importando Flet para a interface gráfica
 
 # Função para criar uma tarefa
@@ -9,7 +9,7 @@ def cadastrar_tarefa():
     try:
         descricao = "Tarefa de exemplo"
         situacao = False  # Situação inicial da tarefa
-        new_task = crud.cadastrar_tarefa(db, descricao, situacao)
+        new_task = tarefa_services.cadastrar_tarefa(db, descricao, situacao)
         print(f"Tarefa criada: ID={new_task.ID}, Descrição={new_task.DESCRICAO}, Situação={new_task.SITUACAO}")
     finally:
         db.close()  # Fecha a sessão
@@ -18,7 +18,7 @@ def cadastrar_tarefa():
 def listar_tarefas():
     db = SessionLocal()  # Cria uma sessão com o banco
     try:
-        tasks = crud.listar_tarefa(db)
+        tasks = tarefa_services.listar_tarefa(db)
         return tasks
     finally:
         db.close()  # Fecha a sessão
@@ -27,7 +27,7 @@ def listar_tarefas():
 def editar_tarefa(task_id, descricao, situacao):
     db = SessionLocal()  # Cria uma sessão com o banco
     try:
-        updated_task = crud.editar_tarefa(db, task_id, descricao, situacao)
+        updated_task = tarefa_services.editar_tarefa(db, task_id, descricao, situacao)
         return updated_task
     finally:
         db.close()  # Fecha a sessão
@@ -36,7 +36,7 @@ def editar_tarefa(task_id, descricao, situacao):
 def excluir_tarefa(task_id):
     db = SessionLocal()  # Cria uma sessão com o banco
     try:
-        success = crud.excluir_tarefa(db, task_id)
+        success = tarefa_services.excluir_tarefa(db, task_id)
         return success
     finally:
         db.close()  # Fecha a sessão
@@ -45,7 +45,7 @@ def excluir_tarefa(task_id):
 def listar_tarefa_por_id(task_id):
     db = SessionLocal()  # Cria uma sessão com o banco
     try:
-        task = crud.listar_tarefa_id(db, task_id)
+        task = tarefa_services.listar_tarefa_id(db, task_id)
         return task
     finally:
         db.close()  # Fecha a sessão

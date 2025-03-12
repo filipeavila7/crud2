@@ -5,14 +5,14 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import flet as ft  # Importando a biblioteca flet para criar a interface gráfica
-from src.service import crud  # Importando as funções de CRUD do arquivo crud.py
-from src.model.db import SessionLocal  # Importando a sessão do banco de dados
+from src.service import tarefa_services # Importando as funções de CRUD do arquivo crud.py
+from model.db import SessionLocal  # Importando a sessão do banco de dados
 
 # Lista global para armazenar as tarefas
 lista_tarefas = []
 
 def main(page=ft.Page):  # Função principal que é chamada para renderizar a página
-    page.title = 'aula 3'  # Definindo o título da página no navegador
+    page.title = 'ToDo List'  # Definindo o título da página no navegador
     page.window.height = 700
     page.window.width = 700
     page.window.center()
@@ -25,13 +25,14 @@ def main(page=ft.Page):  # Função principal que é chamada para renderizar a p
             nova_tarefa.error_text = None  # Se o campo não está vazio, removendo a mensagem de erro
 
             # Criando a tarefa no banco de dados
-            tarefa_criada = crud.cadastrar_tarefa(SessionLocal(), nova_tarefa.value, False)  # Situação inicial como False
+            tarefa_criada = tarefa_services.cadastrar_tarefa(SessionLocal(), nova_tarefa.value, False)  # Situação inicial como False
 
             # Criando um container de linha (Row) para a tarefa
             tarefa = ft.Row([])
 
             # Criando um Checkbox com o texto da nova tarefa
-            checkbox = ft.Checkbox(label=nova_tarefa.value, on_change=lambda e: atualizar_situacao(tarefa_criada.ID, checkbox.checked))
+            checkbox = ft.Checkbox(label=nova_tarefa.value, on_change=lambda e: atualizar_situacao(tarefa_criada.ID, checkbox.value))
+
 
             # Criando o botão de editar com ícone de "editar"
             btn_editar = ft.IconButton(
@@ -57,7 +58,19 @@ def main(page=ft.Page):  # Função principal que é chamada para renderizar a p
 
     def atualizar_situacao(task_id, situacao):  # Função para atualizar a situação da tarefa no banco
         # Aqui vamos chamar a função para atualizar a situação da tarefa no banco de dados sempre que o checkbox for alterado
-        crud.editar_tarefa(SessionLocal(), task_id, None, situacao)  # Atualiza o campo 'SITUACAO' no banco automaticamente
+        tarefa_services.editar_tarefa(SessionLocal(), task_id, None, situacao)  # Atualiza o campo 'SITUACAO' no banco automaticamente
+
+
+
+    def atualizar_situacao(task_id, situacao):  # Função para atualizar a situação da tarefa no banco
+    # Obtenha a descrição da tarefa atual
+        tarefa_atual = tarefa_services.listar_tarefa_id(SessionLocal(), task_id)  # Função para obter a tarefa atual
+        if tarefa_atual:
+            descricao_tarefa = tarefa_atual.DESCRICAO  # Supondo que "DESCRICAO" seja o campo que armazena a descrição
+            # Agora, chamamos a função de editar passando a descrição junto com a nova situação
+            tarefa_services.editar_tarefa(SessionLocal(), task_id, descricao_tarefa, situacao)  # Atualiza a tarefa no banco
+
+
 
     def editar_tarefa(tarefa, checkbox, btn_editar, botao_remover, tarefa_criada):  # Função para editar a tarefa
         # Esconde os componentes de texto e checkbox
@@ -72,7 +85,7 @@ def main(page=ft.Page):  # Função principal que é chamada para renderizar a p
         # Criando o botão para salvar a edição
         def salvar_edicao(e):
             # Atualizando a tarefa no banco de dados com o novo texto e a situação da checkbox
-            updated_task = crud.editar_tarefa(
+            updated_task = tarefa_services.editar_tarefa(
                 SessionLocal(), tarefa_criada.ID, campo_edicao.value, checkbox.value  # Agora passando checkbox.value corretamente
             )
     
@@ -105,10 +118,39 @@ def main(page=ft.Page):  # Função principal que é chamada para renderizar a p
         page.update()  # Atualizando a página
 
     def remover_tarefa(tarefa, tarefa_criada):  # Função para remover a tarefa
-        crud.excluir_tarefa(SessionLocal(), tarefa_criada.ID)  # Remove do banco de dados
-        page.controls.remove(tarefa)  # Removendo a tarefa da página
-        lista_tarefas.remove(tarefa)  # Removendo a tarefa da lista
-        page.update()  # Atualizando a página para refletir as mudanças
+    # Função chamada quando o usuário confirma a exclusão
+        def confirmar_exclusao(e):
+            # Remove a tarefa do banco de dados
+            tarefa_services.excluir_tarefa(SessionLocal(), tarefa_criada.ID)  
+            page.controls.remove(tarefa)  # Removendo a tarefa da página
+            lista_tarefas.remove(tarefa)  # Removendo a tarefa da lista
+            page.update()  # Atualizando a página para refletir as mudanças
+            page.close(dlg_modal)  # Fecha o diálogo de confirmação
+            page.update()  # Atualiza novamente a página para garantir a remoção
+
+    # Função chamada quando o usuário cancela a exclusão
+        def cancelar_exclusao(e):
+            page.close(dlg_modal)  # Fecha o diálogo de confirmação
+            page.update()  # Atualiza a página para refletir o fechamento do diálogo
+
+    # Criando o diálogo de confirmação
+        dlg_modal = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Por favor, confirme"),
+        content=ft.Text("Você tem certeza que deseja excluir esta tarefa?"),
+        actions=[
+            ft.TextButton("Sim", on_click=confirmar_exclusao),  # Botão para confirmar
+            ft.TextButton("Não", on_click=cancelar_exclusao),  # Botão para cancelar
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+    )
+
+    # Adicionando o diálogo à página
+        page.open(dlg_modal)
+        dlg_modal.visible = True  # Torna o diálogo visível
+        page.update()  # Atualiza a página para refletir a exibição do diálogo
+
+
 
     # Definindo o campo de texto para inserir nova tarefa
     nova_tarefa = ft.TextField(label='Nome da tarefa', width=300,)

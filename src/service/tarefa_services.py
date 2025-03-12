@@ -1,7 +1,7 @@
 # CRUD:
 
 from sqlalchemy.orm import Session
-from src.model.db import Tarefa  # Importe o modelo de Tarefa do arquivo db.py
+from model.db import Tarefa  # Importe o modelo de Tarefa do arquivo db.py
 
 # Função para criar uma nova tarefa
 def cadastrar_tarefa(db: Session, descricao: str, situacao: bool = False):
@@ -20,8 +20,8 @@ def editar_tarefa(db: Session, task_id: int, descricao: str, situacao: bool):
     tarefa = db.query(Tarefa).filter(Tarefa.ID == task_id).first()
     
     if tarefa:
-        tarefa.DESCRICAO = descricao
-        tarefa.SITUACAO = situacao
+        tarefa.DESCRICAO = descricao  # Atualiza a descrição
+        tarefa.SITUACAO = situacao  # Atualiza a situação
         
         db.commit()
         db.refresh(tarefa)  # Atualiza a instância após o commit
